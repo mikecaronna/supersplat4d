@@ -65,12 +65,15 @@ outputHeader();
 const BANNER = `/*!
  * 4D Viewer - a fork of supersplat4d (github.com/forgrabbit/supersplat4d),
  * itself derived from PlayCanvas SuperSplat. Modifications by Mike Caronna.
+ * Source: github.com/mikecaronna/supersplat4d/tree/starling-viewer
  *
- * Contains software from: SuperSplat and the PlayCanvas engine
- * (c) PlayCanvas Ltd, MIT; mediabunny, MPL-2.0; JSZip, MIT/GPLv3;
- * meshoptimizer (c) Arseny Kapoulkine, MIT; lodepng (c) Lode Vandevenne, zlib.
+ * Bundles third-party software:
+ *   SuperSplat, the PlayCanvas engine and PCUI (c) PlayCanvas Ltd, MIT
+ *   mediabunny (c) 2025-present Vanilagy and contributors, MPL-2.0
+ *   meshoptimizer (c) 2016-2022 Arseny Kapoulkine, MIT
+ *   JSZip, MIT or GPL-3.0-or-later; i18next, MIT; tslib, 0BSD; lodepng
  *
- * Full license texts: THIRD-PARTY-NOTICES.md in the source repository.
+ * Full license texts and source pointers: THIRD-PARTY-NOTICES.md
  */`;
 
 const application = {
