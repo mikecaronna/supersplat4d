@@ -22,11 +22,125 @@ const focusOnDynamicSplat = (dynamicSplat: Splat, speed = 0) => {
     
     const frame = dynamicSplat.getFocusFrame();
 
+    // Starling Lab local change (2026-10-04): optional `zoom` URL parameter.
+    // Upstream frames the camera one bound-radius from the centre. For a scene
+    // captured from inside a room that puts the camera in a wall, which is both
+    // unreadable and extremely slow to draw (full-screen overdraw). `&zoom=2.5`
+    // multiplies the framing radius so the scene opens from outside.
+    // Omitted or invalid = 1 = upstream behaviour.
+    const zoomParam = parseFloat(new URL(window.location.href).searchParams.get('zoom') ?? '');
+    const zoomMul = (isFinite(zoomParam) && zoomParam > 0) ? zoomParam : 1;
+
+    // Starling Lab local change (2026-10-05): optional `cam` URL parameter,
+    // six comma-separated numbers - camera position then look-at target, in
+    // the scene's own coordinates: `&cam=px,py,pz,tx,ty,tz`.
+    //
+    // Upstream frames the camera from the scene's bounding box, which does
+    // not give a usable opening position for these captures. The `zoom`
+    // parameter cannot reach one either, because the useful positions are not
+    // on that ray - the rig is not concentric with the box. An explicit pose
+    // taken from one of the real camera positions solves it.
+    const camParam = (new URL(window.location.href).searchParams.get('cam') ?? '')
+        .split(',').map(v => parseFloat(v));
+    const camPose = (camParam.length === 6 && camParam.every(v => isFinite(v)))
+        ? camParam : null;
+
+    // `view=fx,fy,fz,azim,elev,distance` - the camera's own state, rather than
+    // a world position. Prefer it. A world position cannot be restored exactly
+    // here: setPose turns the distance into the internal one by multiplying by
+    // fovFactor, the render path divides by fovFactor to get back, and this
+    // viewer moves the field of view WITH the distance, so the factor is not
+    // the same at the two ends and the camera settles short along its own ray.
+    // Measured on the tennis scene, 12.67 units came back as 8.28. These six
+    // numbers are what the camera actually stores, so they survive the trip.
+    const viewParam = (new URL(window.location.href).searchParams.get('view') ?? '')
+        .split(',').map(v => parseFloat(v));
+    const viewState = (viewParam.length === 6 && viewParam.every(v => isFinite(v)))
+        ? viewParam : null;
+
     dynamicSplat.scene.camera.focus({
         focalPoint: frame.focalPoint,
         radius: frame.radius,
         speed
     });
+
+    // Starling Lab local change (2026-10-05): start playing on its own.
+    // Someone arriving at a link should see the thing move, not a still frame
+    // with a play button to find. Fired after the same bound-settled wait the
+    // camera work uses, because the timeline is not ready before that.
+    {
+        const cam0 = dynamicSplat.scene.camera as any;
+        const base0 = cam0.sceneRadius;
+        let n0 = 0;
+        const start = () => {
+            if (cam0.sceneRadius !== base0 || cam0.sceneRadius > 1.0001 || n0++ > 240) {
+                try { dynamicSplat.scene.events.fire('timeline.setPlaying', true); } catch (e) {}
+            } else {
+                requestAnimationFrame(start);
+            }
+        };
+        requestAnimationFrame(start);
+    }
+
+    if (camPose || viewState) {
+        // setPose and setDistance both scale by sceneRadius, which is a
+        // placeholder 1 until the scene bound arrives. Applying either early
+        // silently puts the camera in the wrong place, so wait for the bound
+        // exactly as the zoom path does.
+        const cam = dynamicSplat.scene.camera as any;
+        const baseRadius = cam.sceneRadius;
+        let tries = 0;
+        const place = () => {
+            const settled = cam.sceneRadius !== baseRadius || cam.sceneRadius > 1.0001;
+            if (!settled && tries++ <= 180) {
+                requestAnimationFrame(place);
+                return;
+            }
+            if (viewState) {
+                cam.setFocalPoint(new Vec3(viewState[0], viewState[1], viewState[2]), 0);
+                cam.setAzimElev(viewState[3], viewState[4], 0);
+                cam.setDistance(viewState[5], 0);
+                console.log(`view= applied after ${tries} frames`);
+            } else {
+                cam.setPose(
+                    new Vec3(camPose[0], camPose[1], camPose[2]),
+                    new Vec3(camPose[3], camPose[4], camPose[5]),
+                    0
+                );
+                console.log(`cam= applied after ${tries} frames; sceneRadius=${cam.sceneRadius}`);
+            }
+        };
+        requestAnimationFrame(place);
+        return;
+    }
+
+    if (zoomMul !== 1) {
+        // Re-apply once the scene bound (and therefore camera.sceneRadius) has
+        // settled. Focusing immediately runs while sceneRadius is still 1, so
+        // the distance clamp (controls.maxZoom) swallows the multiplier.
+        // Wait until the scene bound has reached the camera (camera.sceneRadius
+        // stops being its placeholder 1), then re-frame. A fixed delay is not
+        // enough: on a loaded machine the bound can arrive late, and focusing
+        // before it does makes the distance clamp (controls.maxZoom) swallow
+        // the multiplier.
+        const cam = dynamicSplat.scene.camera as any;
+        const baseRadius = cam.sceneRadius;
+        let tries = 0;
+        const apply = () => {
+            const settled = cam.sceneRadius !== baseRadius || cam.sceneRadius > 1.0001;
+            if (settled || tries++ > 180) {
+                cam.focus({
+                    focalPoint: frame.focalPoint,
+                    radius: frame.radius * zoomMul,
+                    speed: 0
+                });
+                console.log(`zoom=${zoomMul} applied after ${tries} frames; sceneRadius=${cam.sceneRadius}, framing radius=${frame.radius}, distance=${frame.radius * zoomMul / cam.sceneRadius}`);
+            } else {
+                requestAnimationFrame(apply);
+            }
+        };
+        requestAnimationFrame(apply);
+    }
     
     console.log('🎯 Focused camera on dynamic splat');
 };

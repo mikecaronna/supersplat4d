@@ -125,6 +125,19 @@ class EditorUI {
         // Detect mobile device
         const isMobile = isMobileDevice();
 
+        // Starling Lab local change (2026-10-06): viewer mode, on by default.
+        //
+        // This application is an editor. Served as a public viewer it hands
+        // every visitor the editing apparatus: a tool palette covering a third
+        // of the scene, menus belonging to the tool rather than the work, and a
+        // live Rotation field that tips the scene on its side if anyone types
+        // in it, with no visible way back.
+        //
+        // `?edit=1` restores the whole editor. That is how scenes get cleaned,
+        // so it has to stay one step away, not be removed.
+        const editMode = new URL(window.location.href).searchParams.get('edit') === '1';
+        const viewerMode = !editMode;
+
         // bottom toolbar
         const scenePanel = new ScenePanel(events, tooltips, { isMobile });
         const viewPanel = new ViewPanel(events, tooltips);
@@ -169,6 +182,15 @@ class EditorUI {
             menu.hidden = true;
             appLabel.hidden = true;
             cursorLabel.hidden = true;
+
+            // Viewer mode on a phone. The mobile toolbar is the editing
+            // equivalent of the desktop panels hidden below, so it goes for the
+            // same reason: a visitor has no use for it and tapping into it can
+            // leave the scene in a state they cannot undo.
+            if (viewerMode) {
+                if (mobileToolbar) mobileToolbar.hidden = true;
+                if (mobileProductOverlay) mobileProductOverlay.hidden = true;
+            }
         } else {
             // Desktop: show all components
             canvasContainer.append(viewPanel);
@@ -177,12 +199,28 @@ class EditorUI {
             canvasContainer.append(rightToolbar);
             canvasContainer.append(modeToggle);
             canvasContainer.append(menu);
+
+            // Hide rather than skip, matching how mobile does it above, so
+            // anything still holding a reference keeps working.
+            if (viewerMode) {
+                scenePanel.hidden = true;
+                viewPanel.hidden = true;
+                colorPanel.hidden = true;
+                bottomToolbar.hidden = true;
+                rightToolbar.hidden = true;
+                modeToggle.hidden = true;
+                menu.hidden = true;
+                cursorLabel.hidden = true;
+            }
         }
 
         // view axes container
         const viewCube = new ViewCube(events);
         if (!isMobile) {
             canvasContainer.append(viewCube);
+            if (viewerMode) {
+                viewCube.hidden = true;
+            }
             events.on('prerender', (cameraMatrix: Mat4) => {
                 viewCube.update(cameraMatrix);
             });
@@ -202,6 +240,9 @@ class EditorUI {
         // Data panel only on desktop
         if (!isMobile) {
             mainContainer.append(dataPanel);
+            if (viewerMode) {
+                dataPanel.hidden = true;
+            }
         } else {
             dataPanel.hidden = true;
         }

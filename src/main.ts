@@ -149,6 +149,43 @@ const main = async () => {
         graphicsDevice
     );
 
+    // Starling Lab local change (2026-10-05): a way to capture the current
+    // view as a `cam=` parameter.
+    //
+    // Picking an opening viewpoint by arithmetic from the scene bounds does
+    // not work here - it lands either inside the subject or outside the room.
+    // The reliable way is to orbit to a view by eye and read it off, and there
+    // was no way to do that, so: press V, or call getView() from the console.
+    // Both print the parameter and copy it.
+    (window as any).getView = () => {
+        // Report the camera's own state, not its world position. The world
+        // position does not survive a round trip: restoring it goes through
+        // setPose, which scales by fovFactor, and this viewer moves the field
+        // of view WITH the distance, so the factor has changed by the time the
+        // render path divides it out again and the camera settles short along
+        // its own ray. These six numbers are what the camera actually stores.
+        const c = scene.camera as any;
+        const f = c.focalPoint;
+        const s = `view=${f.x.toFixed(4)},${f.y.toFixed(4)},${f.z.toFixed(4)},` +
+                  `${c.azim.toFixed(4)},${c.elevation.toFixed(4)},${c.distance.toFixed(6)}`;
+        console.log(s);
+        try { navigator.clipboard.writeText(s); } catch (e) { /* needs focus */ }
+        return s;
+    };
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'v' || e.key === 'V') {
+            const s = (window as any).getView();
+            const el = document.createElement('div');
+            el.textContent = s + '   (copied)';
+            el.style.cssText = 'position:fixed;left:50%;top:14px;transform:translateX(-50%);' +
+                'z-index:99999;background:#111;color:#7fd1c1;padding:8px 14px;' +
+                'border:1px solid #333;border-radius:6px;font:13px monospace;' +
+                'user-select:all;pointer-events:auto';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 12000);
+        }
+    });
+
     // colors
     const bgClr = new Color();
     const selectedClr = new Color();

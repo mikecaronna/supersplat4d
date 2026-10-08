@@ -82,6 +82,24 @@ const registerTimelineEvents = (events: Events) => {
     // anim controls
     let animHandle: EventHandle = null;
 
+    // `bounce=1` in the URL plays the clip forward, then backward, instead of
+    // cutting back to the start.
+    //
+    // Looping by modulo sends the last frame straight to the first, which is a
+    // break in POSITION: everything in the scene moves at once and the eye
+    // reads a jump cut. Turning round at the ends keeps position continuous and
+    // breaks only VELOCITY, which reads as a bounce and is far less visible. It
+    // also doubles the period, so a seam of any kind comes round half as often.
+    //
+    // Nothing is stored or precomputed: the model is continuous in time, so
+    // asking it for a decreasing t costs exactly what increasing t costs.
+    //
+    // It is off by default because a velocity break is only cheap when the
+    // motion has no strong direction to it. Drumming and strumming reverse
+    // invisibly; a skateboarder in mid air does not, and reads as hitting a
+    // wall.
+    const bounce = new URL(window.location.href).searchParams.get('bounce') === '1';
+
     const play = () => {
         let time = frame;
 
@@ -89,8 +107,18 @@ const registerTimelineEvents = (events: Events) => {
         animHandle = events.on('update', (dt: number) => {
             // Timeline always advances frames
             // Dynamic gaussians read frame from timeline and handle sorting themselves
-            time = (time + dt * frameRate) % frames;
-            setFrame(Math.floor(time));
+            if (bounce && frames > 2) {
+                // a triangle wave rather than a sawtooth. The period is
+                // 2 * (frames - 1), not 2 * frames, so the two turning frames
+                // are shown once each and not held for two ticks.
+                const period = 2 * (frames - 1);
+                time = (time + dt * frameRate) % period;
+                const f = time <= frames - 1 ? time : period - time;
+                setFrame(Math.min(frames - 1, Math.floor(f)));
+            } else {
+                time = (time + dt * frameRate) % frames;
+                setFrame(Math.floor(time));
+            }
         });
     };
 

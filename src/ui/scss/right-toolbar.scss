@@ -94,3 +94,10 @@
         }
     }
 }
+// Hiding this with PCUI's `hidden` had no effect: that sets the .pcui-hidden
+// class, and the display rule above is on an ID, which outranks a class. The
+// element carried the class and stayed on screen. Matching ID AND class beats
+// the ID alone. This also fixes mobile, where the same three never hid.
+#right-toolbar.pcui-hidden {
+    display: none;
+}

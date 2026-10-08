@@ -410,7 +410,20 @@ class Camera extends Element {
 
         const target = document.getElementById('canvas-container');
 
-        this.mobileCameraLimits = isMobileDevice();
+        // Starling Lab local change (2026-10-06): off.
+        //
+        // Upstream restricts the camera on phones to suit a product viewer:
+        // it cannot come closer than 0.85 of the scene's bounding radius, can
+        // only tilt between -18 and +12 degrees, and has its look-at point
+        // pulled into a band around the middle of the scene. For a person
+        // standing on a turntable that is sensible. For a captured room it
+        // means a visitor can zoom out and back but never get close, which is
+        // what Mike's readers reported, and it drags a chosen opening view off
+        // target as well.
+        //
+        // These are captures to explore, so the limits come off and a phone
+        // behaves like a desktop.
+        this.mobileCameraLimits = false;
 
         this.controller = new PointerController(this, target);
 

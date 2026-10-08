@@ -13,16 +13,9 @@
         <!-- jszip -->
         <script src="jszip.js"></script>
 
-        <!-- Mobile debug console (eruda) - Remove in production -->
-        <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-        <script>
-            // Initialize eruda for mobile debugging
-            if (typeof eruda !== 'undefined') {
-                eruda.init();
-                console.log('📱 Eruda mobile console initialized');
-            }
-        </script>
+        <!-- eruda CDN debug console removed for offline/self-hosted use -->
 
+        
         <!-- Service worker -->
         <script>
             const sw = navigator.serviceWorker;
@@ -36,5 +29,8 @@
 
     <body>
         <script type="module" src="./index.js"></script>
-    </body>
+    <!-- Cloudflare Web Analytics -->
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "38a9ac688dff4cf298d0b71aaebb80f2"}'></script>
+<!-- End Cloudflare Web Analytics -->
+</body>
 </html>

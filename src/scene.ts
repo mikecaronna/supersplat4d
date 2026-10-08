@@ -250,7 +250,12 @@ class Scene {
         this.events.on('miniStats.toggleVisible', () => {
             setMiniStatsVisible(!this.miniStatsVisible);
         });
-        setMiniStatsVisible(!isMobileDevice());
+        // Starling Lab local change (2026-10-06): the frame rate and VRAM
+        // readout is developer instrumentation. It is useful while cleaning a
+        // scene and has no place in front of a visitor, so it follows the same
+        // flag as the rest of the editor: present for ?edit=1, gone otherwise.
+        const editMode = new URL(window.location.href).searchParams.get('edit') === '1';
+        setMiniStatsVisible(editMode && !isMobileDevice());
 
         // MiniStats needs continuous render loop to update
         this.app.autoRender = true;
