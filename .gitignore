@@ -27,3 +27,7 @@ README_DEPLOYMENT_CN.md
 
 example/
 docs/
+
+# Upstream demo captures, moved out of public/ so they are not built into the
+# site. Kept on disk for reference; not ours to redistribute.
+_upstream-demo-scenes/

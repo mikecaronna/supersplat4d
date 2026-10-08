@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>SuperSplat</title>
+        <title>4D Viewer</title>
         <meta charset="utf-8" />
         <base href="__BASE_HREF__">
         <link rel="manifest" href="./manifest.json">
         <link rel="stylesheet" href="./index.css">
         <link rel="shortcut icon" href="#">
-        <meta name="description" content="SuperSplat is an advanced browser-based editor for manipulating and optimizing 3D Gaussian Splats. It is open source and engine agnostic." />
+        <meta name="description" content="A viewer for 4D Gaussian splat scenes." />
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
         <!-- jszip -->
@@ -29,8 +29,9 @@
 
     <body>
         <script type="module" src="./index.js"></script>
-    <!-- Cloudflare Web Analytics -->
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "38a9ac688dff4cf298d0b71aaebb80f2"}'></script>
-<!-- End Cloudflare Web Analytics -->
-</body>
+    <!-- Web analytics, injected at build time from CF_BEACON_TOKEN. Empty
+         unless that variable is set, so forks do not report into an account
+         they do not own. -->
+    __CF_BEACON__
+    </body>
 </html>

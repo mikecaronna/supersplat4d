@@ -169,14 +169,16 @@ const main = async () => {
         const s = `view=${f.x.toFixed(4)},${f.y.toFixed(4)},${f.z.toFixed(4)},` +
                   `${c.azim.toFixed(4)},${c.elevation.toFixed(4)},${c.distance.toFixed(6)}`;
         console.log(s);
-        try { navigator.clipboard.writeText(s); } catch (e) { /* needs focus */ }
+        try {
+            navigator.clipboard.writeText(s);
+        } catch (e) { /* clipboard needs document focus */ }
         return s;
     };
     window.addEventListener('keydown', (e) => {
         if (e.key === 'v' || e.key === 'V') {
             const s = (window as any).getView();
             const el = document.createElement('div');
-            el.textContent = s + '   (copied)';
+            el.textContent = `${s}   (copied)`;
             el.style.cssText = 'position:fixed;left:50%;top:14px;transform:translateX(-50%);' +
                 'z-index:99999;background:#111;color:#7fd1c1;padding:8px 14px;' +
                 'border:1px solid #333;border-radius:6px;font:13px monospace;' +

@@ -27,6 +27,12 @@ const ENGINE_DIR = path.resolve(`node_modules/playcanvas/build/playcanvas${engin
 const PCUI_DIR = path.resolve('node_modules/@playcanvas/pcui');
 const HREF = process.env.BASE_HREF || '';
 
+// Web analytics are opt-in at build time. Without CF_BEACON_TOKEN the tag is
+// absent, so a fork or a local build reports nothing into anyone's account.
+const CF_BEACON = process.env.CF_BEACON_TOKEN ?
+    `<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "${process.env.CF_BEACON_TOKEN}"}'></script>` :
+    '';
+
 const buildIdReplace = () => ({
     name: 'build-id-replace',
     transform(code, id) {
@@ -56,12 +62,24 @@ const outputHeader = () => {
 
 outputHeader();
 
+const BANNER = `/*!
+ * 4D Viewer - a fork of supersplat4d (github.com/forgrabbit/supersplat4d),
+ * itself derived from PlayCanvas SuperSplat. Modifications by Mike Caronna.
+ *
+ * Contains software from: SuperSplat and the PlayCanvas engine
+ * (c) PlayCanvas Ltd, MIT; mediabunny, MPL-2.0; JSZip, MIT/GPLv3;
+ * meshoptimizer (c) Arseny Kapoulkine, MIT; lodepng (c) Lode Vandevenne, zlib.
+ *
+ * Full license texts: THIRD-PARTY-NOTICES.md in the source repository.
+ */`;
+
 const application = {
     input: 'src/index.ts',
     output: {
+        banner: BANNER,
         dir: 'dist',
         format: 'esm',
-        sourcemap: true,
+        sourcemap: BUILD_TYPE !== 'release',
         globals: {
             'jszip': 'JSZip'
         }
@@ -75,7 +93,9 @@ const application = {
                 {
                     src: 'src/index.html',
                     transform: (contents, filename) => {
-                        return contents.toString().replace('__BASE_HREF__', HREF);
+                        return contents.toString()
+                        .replace('__BASE_HREF__', HREF)
+                        .replace('__CF_BEACON__', CF_BEACON);
                     }
                 },
                 { src: 'src/manifest.json' },
@@ -127,7 +147,7 @@ const serviceWorker = {
     output: {
         dir: 'dist',
         format: 'esm',
-        sourcemap: true
+        sourcemap: BUILD_TYPE !== 'release'
     },
     plugins: [
         buildIdReplace(),

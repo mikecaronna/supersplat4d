@@ -40,10 +40,8 @@ const focusOnDynamicSplat = (dynamicSplat: Splat, speed = 0) => {
     // parameter cannot reach one either, because the useful positions are not
     // on that ray - the rig is not concentric with the box. An explicit pose
     // taken from one of the real camera positions solves it.
-    const camParam = (new URL(window.location.href).searchParams.get('cam') ?? '')
-        .split(',').map(v => parseFloat(v));
-    const camPose = (camParam.length === 6 && camParam.every(v => isFinite(v)))
-        ? camParam : null;
+    const camParam = (new URL(window.location.href).searchParams.get('cam') ?? '').split(',').map(v => parseFloat(v));
+    const camPose = camParam.length === 6 && camParam.every(v => isFinite(v)) ? camParam : null;
 
     // `view=fx,fy,fz,azim,elev,distance` - the camera's own state, rather than
     // a world position. Prefer it. A world position cannot be restored exactly
@@ -53,10 +51,8 @@ const focusOnDynamicSplat = (dynamicSplat: Splat, speed = 0) => {
     // the same at the two ends and the camera settles short along its own ray.
     // Measured on the tennis scene, 12.67 units came back as 8.28. These six
     // numbers are what the camera actually stores, so they survive the trip.
-    const viewParam = (new URL(window.location.href).searchParams.get('view') ?? '')
-        .split(',').map(v => parseFloat(v));
-    const viewState = (viewParam.length === 6 && viewParam.every(v => isFinite(v)))
-        ? viewParam : null;
+    const viewParam = (new URL(window.location.href).searchParams.get('view') ?? '').split(',').map(v => parseFloat(v));
+    const viewState = viewParam.length === 6 && viewParam.every(v => isFinite(v)) ? viewParam : null;
 
     dynamicSplat.scene.camera.focus({
         focalPoint: frame.focalPoint,
@@ -74,7 +70,9 @@ const focusOnDynamicSplat = (dynamicSplat: Splat, speed = 0) => {
         let n0 = 0;
         const start = () => {
             if (cam0.sceneRadius !== base0 || cam0.sceneRadius > 1.0001 || n0++ > 240) {
-                try { dynamicSplat.scene.events.fire('timeline.setPlaying', true); } catch (e) {}
+                try {
+                    dynamicSplat.scene.events.fire('timeline.setPlaying', true);
+                } catch (e) { /* scene not ready yet */ }
             } else {
                 requestAnimationFrame(start);
             }
