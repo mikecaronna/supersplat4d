@@ -16,6 +16,7 @@ import { Scene } from './scene';
 import { getSceneConfig } from './scene-config';
 import { registerSelectionEvents } from './selection';
 import { Shortcuts } from './shortcuts';
+import { registerAudioTrack } from './audio-track';
 import { registerTimelineEvents } from './timeline';
 import { BoxSelection } from './tools/box-selection';
 import { BrushSelection } from './tools/brush-selection';
@@ -296,6 +297,9 @@ const main = async () => {
     registerEditorEvents(events, editHistory, scene);
     registerSelectionEvents(events, scene);
     registerTimelineEvents(events);
+    // Sound, when the scene link carries ?audio=. Registered after the
+    // timeline because it listens to its events and nothing else.
+    registerAudioTrack(events);
     registerCameraPosesEvents(events);
     registerTransformHandlerEvents(events);
     registerPlySequenceEvents(events);
